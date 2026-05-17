@@ -1,8 +1,8 @@
 # happa
 
 `happa` checks pnpm projects for npm packages and prints whether each package is
-installed in `node_modules`, resolved in the lockfile dependency graph, or
-missing.
+physically installed in `node_modules`, resolved in the lockfile dependency
+graph, or missing from both.
 
 It is designed for supply-chain incident checks where you need to ask "which of
 these repositories resolve this package, and which version?" across many local
@@ -78,9 +78,18 @@ happa --format json react
   package's own `package.json`.
 - `resolved`: found in `pnpm-lock.yaml` under `packages` or `snapshots`, which
   includes transitive dependencies.
-- `installed+resolved`: found in both places.
-- `missing`: not found.
+- `installed+resolved`: found in both places. In TSV output this is printed as
+  separate `installed` and `resolved` rows so each source/version stays easy to
+  filter.
+- `missing`: not found in either `node_modules` or `pnpm-lock.yaml`.
 - `error`: repository could not be inspected.
+
+For supply-chain sweeps, `resolved` is usually the strongest signal because it
+means the package is part of the current lockfile dependency graph. An
+`installed` version without a matching `resolved` version can be stale local
+`node_modules` content left behind by an older install. A `resolved` version
+without a matching `installed` version means the lockfile contains the package,
+but the current `node_modules` tree does not show that exact installed package.
 
 Only modern pnpm lockfiles are supported in this version. The parser targets the
 `pnpm-lock.yaml` structure used by pnpm 10/11 projects: `importers`,
