@@ -81,7 +81,8 @@ happa --format json react
 - `installed+resolved`: found in both places. In TSV output this is printed as
   separate `installed` and `resolved` rows so each source/version stays easy to
   filter.
-- `missing`: not found in either `node_modules` or `pnpm-lock.yaml`.
+- `missing`: not found in either `node_modules` or `pnpm-lock.yaml`. Missing
+  results are omitted from TSV output.
 - `error`: repository could not be inspected.
 
 For supply-chain sweeps, `resolved` is usually the strongest signal because it

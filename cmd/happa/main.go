@@ -241,6 +241,9 @@ func writeTSV(w io.Writer, results []check.Result, header bool) {
 		fmt.Fprintln(w, "repo\tpackage\tsource\tversion\terror")
 	}
 	for _, result := range results {
+		if result.Status == "missing" {
+			continue
+		}
 		wroteVersion := false
 		for _, version := range result.InstalledVersions {
 			fmt.Fprintf(w, "%s\t%s\tinstalled\t%s\t\n", result.Repo, result.Package, version)

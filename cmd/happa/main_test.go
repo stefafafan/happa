@@ -69,7 +69,7 @@ func TestWriteTSVOmitsHeaderByDefault(t *testing.T) {
 	}
 }
 
-func TestWriteTSVCanIncludeHeader(t *testing.T) {
+func TestWriteTSVOmitsMissingResults(t *testing.T) {
 	var output bytes.Buffer
 
 	writeTSV(&output, []check.Result{{
@@ -78,7 +78,7 @@ func TestWriteTSVCanIncludeHeader(t *testing.T) {
 		Status:  "missing",
 	}}, true)
 
-	want := "repo\tpackage\tsource\tversion\terror\n.\treact\tmissing\t\t\n"
+	want := "repo\tpackage\tsource\tversion\terror\n"
 	if output.String() != want {
 		t.Fatalf("writeTSV() = %q, want %q", output.String(), want)
 	}
