@@ -26,16 +26,12 @@ You can also pipe package names from other commands, such as `find` or `printf`:
 printf 'react\nvite\n' | happa
 ```
 
-Pipe repositories while passing packages as arguments:
+Check repositories with `pnpm-workspace.yaml` from a parent directory:
 
 ```sh
-find ~/src -name .git -type d -prune | sed 's#/.git$##' | happa --repo - react
-```
-
-Pipe explicit repository/package pairs:
-
-```sh
-printf 'repo-a\treact\nrepo-b\tvite\n' | happa --stdin pairs
+find . -mindepth 2 -maxdepth 2 -name pnpm-workspace.yaml -print \
+  | sed 's#/pnpm-workspace.yaml$##' \
+  | happa --repo - react
 ```
 
 Default output is TSV. If the package is not found, it is omitted from the output.
@@ -49,18 +45,6 @@ Using alongside `grep`, happa makes it easy to check for specific versions.
 
 ```sh
 happa react | grep '19.1.0'
-```
-
-Check multiple repositories for a specific version:
-
-```sh
-happa --repo ~/src/repo-a --repo ~/src/repo-b react | grep -F '19.1.0'
-```
-
-Add a TSV header row when needed:
-
-```sh
-happa --header react
 ```
 
 JSON is also available:
