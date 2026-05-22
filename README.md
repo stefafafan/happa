@@ -9,7 +9,7 @@ The term `happa` comes from the Japanese word for leaf. The name is a play on th
 ## Install
 
 ```sh
-go install ./cmd/happa
+go install github.com/stefafafan/happa/cmd/happa@latest
 ```
 
 ## Usage
