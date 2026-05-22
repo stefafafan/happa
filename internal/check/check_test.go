@@ -73,6 +73,52 @@ func TestRequestsDoesNotTreatNpmNodeModulesAsPnpmInstall(t *testing.T) {
 	}
 }
 
+func TestRequestsDoesNotFollowLockfileSymlink(t *testing.T) {
+	repo := t.TempDir()
+	outside := filepath.Join(t.TempDir(), "pnpm-lock.yaml")
+	if err := os.WriteFile(outside, []byte(`
+lockfileVersion: '9.0'
+packages:
+  leaked@9.9.9:
+    resolution: {integrity: sha512-test}
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(repo, "pnpm-lock.yaml")); err != nil {
+		t.Skipf("symlinks are not supported: %v", err)
+	}
+
+	results := Requests([]Request{{Repo: repo, Package: "leaked"}})
+	if results[0].Status != "error" {
+		t.Fatalf("status = %q, want error", results[0].Status)
+	}
+}
+
+func TestRequestsDoesNotFollowPackageManifestSymlink(t *testing.T) {
+	repo := t.TempDir()
+	writeFile(t, repo, "pnpm-lock.yaml", "lockfileVersion: '9.0'\n")
+	outside := filepath.Join(t.TempDir(), "package.json")
+	if err := os.WriteFile(outside, []byte(`{
+  "name": "leaked",
+  "version": "9.9.9"
+}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	packageDir := filepath.Join(repo, "node_modules/.pnpm/leaked@9.9.9/node_modules/leaked")
+	if err := os.MkdirAll(packageDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(packageDir, "package.json")); err != nil {
+		t.Skipf("symlinks are not supported: %v", err)
+	}
+
+	results := Requests([]Request{{Repo: repo, Package: "leaked"}})
+	if results[0].Status != "missing" {
+		t.Fatalf("status = %q, want missing", results[0].Status)
+	}
+}
+
 func TestRequestsReportsRepoDirectoryName(t *testing.T) {
 	root := t.TempDir()
 	repo := filepath.Join(root, "readable-repo")

@@ -2,11 +2,14 @@ package check
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 )
+
+const maxLockfileBytes = 50 * 1024 * 1024
 
 type Request struct {
 	Repo    string
@@ -97,10 +100,8 @@ func inspectRepo(repo string) repoIndex {
 		Resolved:  map[string]map[string]bool{},
 	}
 
-	lockPath := filepath.Join(repo, "pnpm-lock.yaml")
-	lockBytes, err := os.ReadFile(lockPath)
-	hasLock := err == nil
-	if err != nil && !os.IsNotExist(err) {
+	lockBytes, hasLock, err := readRegularFile(filepath.Join(repo, "pnpm-lock.yaml"), maxLockfileBytes)
+	if err != nil {
 		return repoIndex{Err: err}
 	}
 
@@ -118,8 +119,47 @@ func inspectRepo(repo string) repoIndex {
 }
 
 func hasPnpmInstall(repo string) bool {
-	info, err := os.Stat(filepath.Join(repo, "node_modules", ".pnpm"))
+	info, err := os.Lstat(filepath.Join(repo, "node_modules", ".pnpm"))
 	return err == nil && info.IsDir()
+}
+
+func readRegularFile(path string, maxBytes int64) ([]byte, bool, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, false, fmt.Errorf("%s is not a regular file", path)
+	}
+	if info.Size() > maxBytes {
+		return nil, false, fmt.Errorf("%s is too large: %d bytes exceeds %d", path, info.Size(), maxBytes)
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, false, err
+	}
+	defer file.Close()
+
+	openedInfo, err := file.Stat()
+	if err != nil {
+		return nil, false, err
+	}
+	if !os.SameFile(info, openedInfo) {
+		return nil, false, fmt.Errorf("%s changed while being inspected", path)
+	}
+
+	content, err := io.ReadAll(io.LimitReader(file, maxBytes+1))
+	if err != nil {
+		return nil, false, err
+	}
+	if int64(len(content)) > maxBytes {
+		return nil, false, fmt.Errorf("%s is too large: %d bytes exceeds %d", path, len(content), maxBytes)
+	}
+	return content, true, nil
 }
 
 func addVersion(target map[string]map[string]bool, name, version string) {
