@@ -1,10 +1,13 @@
-# happa
+# happa - a simple CLI tool for listing installed / resolved npm packages
 
 `happa` checks and prints the installed / resolved versions of specified packages, without needing to run `pnpm list` or `pnpm why` in each repository.
 
 It is designed for easy list up of packages across many repositories at once, and to be used alongside other commands such as `grep`.
 
 The term `happa` comes from the Japanese word for leaf. The name is a play on the leaves of a dependency tree.
+
+> [!IMPORTANT]
+> This tool only supports pnpm at the moment.
 
 ## Install
 
@@ -53,7 +56,3 @@ JSON is also available:
 happa --format json react
 ```
 
-## Meaning
-
-- `installed`: found in a pnpm `node_modules` tree by reading the installed package's own `package.json`.
-- `resolved`: found in `pnpm-lock.yaml` under `packages` or `snapshots`, which includes transitive dependencies.
