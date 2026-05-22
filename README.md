@@ -38,7 +38,7 @@ Pipe explicit repository/package pairs:
 printf 'repo-a\treact\nrepo-b\tvite\n' | happa --stdin pairs
 ```
 
-Default output is TSV. If the package is not found, it is ommitted from the output.
+Default output is TSV. If the package is not found, it is omitted from the output.
 
 ```text
 happa	react	installed	19.1.0
