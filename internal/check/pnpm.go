@@ -64,11 +64,11 @@ func packageFromLockKey(key string) (string, string, bool) {
 }
 
 func splitYAMLKeyValue(line string) (string, string, bool) {
-	colon := strings.IndexByte(line, ':')
-	if colon < 0 {
+	before, after, ok := strings.Cut(line, ":")
+	if !ok {
 		return "", "", false
 	}
-	return strings.TrimSpace(line[:colon]), strings.TrimSpace(line[colon+1:]), true
+	return strings.TrimSpace(before), strings.TrimSpace(after), true
 }
 
 func leadingSpaces(value string) int {
